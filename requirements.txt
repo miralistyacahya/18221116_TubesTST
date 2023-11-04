@@ -1,0 +1,4 @@
+uvicorn==0.15.0
+fastapi==0.68.0
+mysqlclient==2.0.3
+mysql-connector-python==8.2.0
