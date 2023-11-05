@@ -1,7 +1,12 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, File, UploadFile
+from pathlib import Path
 from models.OrderModel import Order
 from typing import List
 from db import conn
+import shutil
+from CakeController import getCakeIdByName
+from CustomerController import getCustomerIdByPhone, createNewCustomer
+
 
 orderRouter = APIRouter(
     tags=["Order"]
@@ -42,6 +47,52 @@ async def getAllOrder() -> List[Order]:
         "response": orders
     }   
     
+
+
+UPLOAD_DIR = "storage/design"
+
+@orderRouter.post("/order")
+async def createOrder(customer_name: str, phone:str, cake_name:str, order_date: str, pickup_date: str, order_status: str, addr: str, cake_img: UploadFile):
+    if cake_img:
+        img_link = f"{UPLOAD_DIR}/{cake_img.filename}"
+
+        with open(img_link, "wb") as buffer:
+            shutil.copyfileobj(cake_img.file, buffer)
+    else:
+        img_link = None
+    
+    cake_id = getCakeIdByName(cake_name)
+    if cake_id is None:
+        raise HTTPException(status_code=400, detail="Cake tidak tersedia pada bakery")
+    
+    customer_id = getCustomerIdByPhone(phone)
+    if customer_id is None:
+        result = createNewCustomer(customer_name, phone)
+        customer_id = result["customer_id"]
+
+    order = Order(
+        customer_id=customer_id,
+        cake_id=cake_id,
+        order_date=order_date,
+        pickup_date=pickup_date,
+        order_status=order_status,
+        addr=addr,
+        cake_img=img_link
+    )
+
+    cursor = conn.cursor()
+    query = "INSERT INTO orders (customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+    cursor.execute(query, (order.customer_id, order.cake_id, order.order_date, order.pickup_date, order.order_status, order.addr, order.cake_img))
+    conn.commit()
+    cursor.close()
+
+    return {
+        "success": True,
+        "message": "Order berhasil dibuat",
+        "code": 200
+    }
+
+
 
 @orderRouter.get("/order/{order_id}")
 async def getOrder(order_id: int):

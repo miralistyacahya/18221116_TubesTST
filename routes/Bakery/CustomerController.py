@@ -9,9 +9,6 @@ customerRouter = APIRouter(
 
 customer = {}
 
-# @customerRouter.get("/customer", response_model=List[Customer])
-# async def getAllCustomer() -> List[Customer]:
-#     return customers
 
 @customerRouter.get("/customer")
 async def getAllCustomer() -> List[Customer]:
@@ -67,29 +64,75 @@ async def getCustomer(customer_id: int):
         "response": customer
     }
 
+@customerRouter.get("/customer/{phone}")
+async def getCustomerIdByPhone(phone: str):
+    cursor = conn.cursor()
+    query = "SELECT customer_id FROM customers WHERE phone=%s;"
+    cursor.execute(query, (phone,))
+    customer_id = cursor.fetchone()
+    cursor.close() 
+
+    if customer_id:
+        return customer_id[0]
+    else:
+        return None
+
+
 
 @customerRouter.post("/customer")
 async def createNewCustomer(customer : Customer):
+    
+    # existing_customer = getCustomerIdByPhone(customer.phone)
 
+    # if existing_customer is not None:
+    #     raise HTTPException(status_code=400, detail=f"Customer dengan no. telpon {customer.phone} sudah tersedia")
+    
     cursor = conn.cursor()
-    query = "SELECT customer_id FROM customers WHERE phone = %s"
-    cursor.execute(query, (customer.phone,))
-    existing_customer = cursor.fetchone()
-
-    if existing_customer:
-        cursor.close()
-        raise HTTPException(status_code=400, detail=f"Customer dengan no. telpon {customer.phone} sudah tersedia")
-
     query = "INSERT INTO customers (customer_name, phone) VALUES (%s, %s)"
     cursor.execute(query, (customer.customer_name, customer.phone))
     conn.commit()
+    customer_id = cursor.lastrowid
     cursor.close()
 
     return {
         "success": True,
         "message": f"customer dengan nama {customer.customer_name} berhasil dibuat",
+        "code": 200,
+        "customer_id": customer_id
+    }
+
+
+
+@customerRouter.put("/customer/{customer_id}")
+async def editCustomer(customer_id: int, customer: Customer):
+    cursor = conn.cursor()
+    query = "SELECT customer_id FROM customers WHERE customer_id=%s"
+    cursor.execute(query, (customer_id,))
+    existing_customer = cursor.fetchone()
+    
+    if not existing_customer:
+        cursor.close()
+        raise HTTPException(status_code=404, detail=f"Customer dengan ID {customer_id} tidak ditemukan")
+    
+    if customer.customer_name and customer.phone:
+        query = "UPDATE customers SET customer_name=%s, phone=%s WHERE customer_id=%s"
+        cursor.execute(query, (customer.customer_name, customer.phone, customer_id))
+    elif customer.customer_name: # Mengubah hanya customer_name
+        query = "UPDATE customers SET customer_name=%s WHERE customer_id=%s"
+        cursor.execute(query, (customer.customer_name, customer_id))
+    elif customer.phone:  # Mengubah hanya phone
+        query = "UPDATE customers SET phone=%s WHERE customer_id=%s"
+        cursor.execute(query, (customer.phone, customer_id))
+
+    conn.commit()
+    cursor.close()
+
+    return {
+        "success": True,
+        "message": f"Customer dengan ID {customer_id} berhasil diubah",
         "code": 200
     }
+
 
 
 @customerRouter.delete("/customer/{customer_id}")
