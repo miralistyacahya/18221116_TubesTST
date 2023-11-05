@@ -1,4 +1,4 @@
-import MySQLdb
+# import MySQLdb
 import os
 import mysql.connector
 
@@ -30,5 +30,5 @@ conn = mysql.connector.connect(
     port=int(db_port),
     user=db_user,
     password=db_password,
-    database='bakerycake'
+    database='bakerytst'
 )

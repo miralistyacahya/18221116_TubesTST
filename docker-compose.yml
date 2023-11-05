@@ -1,34 +1,34 @@
 version: '3.8'
 services:
   # FastAPI application service
-  bakerycake-app:
-    container_name: bakerycake-app
-    image: bakerycake-app:latest
-    hostname: bakerycake-app
+  bakerytst-app:
+    container_name: bakerytst-app
+    image: bakerytst-app:latest
+    hostname: bakerytst-app
     ports:
-      - "8500:8500"
+      - "8600:8600"
     env_file:
       - .env
     depends_on:
-      bakerycake-app-db:
+      bakerytst-app-db:
         condition: service_healthy
     networks:
-      - bakerycake-app
+      - bakerytst-app
 
   # MySQL database service
-  bakerycake-app-db:
-    container_name: bakerycake-app-db
+  bakerytst-app-db:
+    container_name: bakerytst-app-db
     image: mysql:latest
-    hostname: bakerycake-app-db
+    hostname: bakerytst-app-db
     env_file:
       - .env
     ports:
       - "3307:3306"
     volumes:
-      - mysql:/var/lib/mysql
+      - ./mysql:/var/lib/mysql
       - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - bakerycake-app
+      - bakerytst-app
     restart: always
     healthcheck:
       test: mysqladmin ping -h localhost -u${MYSQL_USER} -p${MYSQL_PASSWORD}
@@ -40,4 +40,4 @@ volumes:
   mysql:
 
 networks:
-  bakerycake-app:
+  bakerytst-app:

@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS cakes;
+DROP TABLE IF EXISTS customers;
+DROP TABLE IF EXISTS orders;
+
 CREATE TABLE cakes (
     cake_id int AUTO_INCREMENT PRIMARY KEY,
     cake_name varchar(255) NOT NULL,
@@ -8,11 +12,11 @@ CREATE TABLE cakes (
 
 CREATE TABLE customers (
     customer_id int AUTO_INCREMENT PRIMARY KEY,
-    customer_name varhcar(255) NOT NULL,
+    customer_name varchar(255) NOT NULL,
     phone varchar(255) NOT NULL,
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp ON UPDATE CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
+);
 
 CREATE TABLE orders (
     order_id int AUTO_INCREMENT PRIMARY KEY,
@@ -20,7 +24,7 @@ CREATE TABLE orders (
     cake_id int,
     order_date date,
     pickup_date date,
-    order_status ENUM('pickup', 'delivery'),
+    order_status varchar(255),
     addr varchar(255),
     cake_img varchar(255),
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,

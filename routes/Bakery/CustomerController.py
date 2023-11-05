@@ -1,17 +1,68 @@
 from fastapi import APIRouter, HTTPException, status
 from models.CustomerModel import Customer
 from typing import List
+from db import conn
 
 customerRouter = APIRouter(
     tags=["Customer"]
 )
 
-customers = {}
+customer = {}
 
-@customerRouter.get("/customer", response_model=List[Customer])
+# @customerRouter.get("/customer", response_model=List[Customer])
+# async def getAllCustomer() -> List[Customer]:
+#     return customers
+
+@customerRouter.get("/customer")
 async def getAllCustomer() -> List[Customer]:
-    return customers
+    cursor = conn.cursor()
+    query = "SELECT * FROM customers;"
+    cursor.execute(query)
+    customer_records = cursor.fetchall()
+    cursor.close()
 
-# @customerRouter.get("/customer/{id}", response_model=Customer)
-# async def getCustomer(customer_id: int) -> Customer:
+    # kalo error gaada data
+    if not customer_records:
+        raise HTTPException(status_code=404, detail="Customers not found")
 
+    # list Customer
+    customers = [Customer(
+        customer_id=customer[0],
+        customer_name=customer[1],
+        phone=customer[2],
+        created_at=customer[3].isoformat(),
+        updated_at=customer[4].isoformat()
+    ) for customer in customer_records]
+
+    return {
+        "success": True,
+        "message": "success",
+        "code": 200,
+        "response": customers
+    }
+        
+@customerRouter.get("/customer/{cust_id}")
+async def getCustomer(cust_id: int):
+    cursor = conn.cursor()
+    query = "SELECT customer_id, customer_name, phone, created_at, updated_at FROM customers WHERE customer_id=%s;"
+    cursor.execute(query, (cust_id,))
+    customer_records = cursor.fetchone()
+    cursor.close() 
+
+    if not customer_records:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    customer = Customer(
+    customer_id=customer_records[0],
+    customer_name=customer_records[1],
+    phone=customer_records[2],
+    created_at=customer_records[3].isoformat(),
+    updated_at=customer_records[4].isoformat()
+    )
+
+    return {
+        "success": True,
+        "message": "success",
+        "code": 200,
+        "response": customer
+    }
