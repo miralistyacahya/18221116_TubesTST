@@ -4,7 +4,7 @@ from models.CustomerModel import Customer
 from models.CakeModel import Cake
 
 class Order(BaseModel):
-    order_id: int
+    order_id: Optional[int] = None
     customer_id: int #id customer dari kelas Customer
     cake_id: int
     order_date: str
@@ -12,8 +12,8 @@ class Order(BaseModel):
     order_status: str
     addr: Optional[str]
     cake_img: str
-    created_at: str
-    updated_at: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         json_schema_extra = {

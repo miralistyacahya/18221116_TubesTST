@@ -41,11 +41,11 @@ async def getAllCustomer() -> List[Customer]:
         "response": customers
     }
         
-@customerRouter.get("/customer/{cust_id}")
-async def getCustomer(cust_id: int):
+@customerRouter.get("/customer/{customer_id}")
+async def getCustomer(customer_id: int):
     cursor = conn.cursor()
     query = "SELECT customer_id, customer_name, phone, created_at, updated_at FROM customers WHERE customer_id=%s;"
-    cursor.execute(query, (cust_id,))
+    cursor.execute(query, (customer_id,))
     customer_records = cursor.fetchone()
     cursor.close() 
 
@@ -65,4 +65,51 @@ async def getCustomer(cust_id: int):
         "message": "success",
         "code": 200,
         "response": customer
+    }
+
+
+@customerRouter.post("/customer")
+async def createNewCustomer(customer : Customer):
+
+    cursor = conn.cursor()
+    query = "SELECT customer_id FROM customers WHERE phone = %s"
+    cursor.execute(query, (customer.phone,))
+    existing_customer = cursor.fetchone()
+
+    if existing_customer:
+        cursor.close()
+        raise HTTPException(status_code=400, detail=f"Customer dengan no. telpon {customer.phone} sudah tersedia")
+
+    query = "INSERT INTO customers (customer_name, phone) VALUES (%s, %s)"
+    cursor.execute(query, (customer.customer_name, customer.phone))
+    conn.commit()
+    cursor.close()
+
+    return {
+        "success": True,
+        "message": f"customer dengan nama {customer.customer_name} berhasil dibuat",
+        "code": 200
+    }
+
+
+@customerRouter.delete("/customer/{customer_id}")
+async def deleteCustomer(customer_id: int):
+    cursor = conn.cursor()
+    query = "SELECT customer_id FROM customers WHERE customer_id=%s"
+    cursor.execute(query, (customer_id,))
+    existing_customer = cursor.fetchone()
+    
+    if not existing_customer:
+        cursor.close()
+        raise HTTPException(status_code=404, detail=f"Customer dengan ID {customer_id} tidak ditemukan")
+
+    query = "DELETE FROM customers WHERE customer_id=%s"
+    cursor.execute(query, (customer_id,))
+    conn.commit()
+    cursor.close()
+
+    return {
+        "success": True,
+        "message": f"customer dengan id {customer_id} berhasil dihapus",
+        "code": 200
     }

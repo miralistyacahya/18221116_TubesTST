@@ -2,11 +2,11 @@ from pydantic import BaseModel
 from typing import Optional
 
 class Cake(BaseModel):
-    cake_id: int
+    cake_id: Optional[int] = None
     cake_name: str
     template_img: Optional[str]
-    created_at: str
-    updated_at: str
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
     class Config:
         json_schema_extra = {

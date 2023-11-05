@@ -73,3 +73,26 @@ async def getOrder(order_id: int):
         "code": 200,
         "response": order
     }
+
+
+@orderRouter.delete("/order/{order_id}")
+async def deleteOrder(order_id: int):
+    cursor = conn.cursor()
+    query = "SELECT order_id FROM orders WHERE order_id=%s"
+    cursor.execute(query, (order_id,))
+    existing_order = cursor.fetchone()
+    
+    if not existing_order:
+        cursor.close()
+        raise HTTPException(status_code=404, detail=f"Order dengan ID {order_id} tidak ditemukan")
+
+    query = "DELETE FROM orders WHERE order_id=%s"
+    cursor.execute(query, (order_id,))
+    conn.commit()
+    cursor.close()
+
+    return {
+        "success": True,
+        "message": f"order dengan id {order_id} berhasil dihapus",
+        "code": 200
+    }
