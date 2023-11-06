@@ -22,15 +22,6 @@ async def getAllCustomer():
     if not customer_records:
         raise HTTPException(status_code=404, detail="Customers not found")
 
-    # list Customer
-    # customers = [Customer(
-    #     customer_id=customer[0],
-    #     customer_name=customer[1],
-    #     phone=customer[2],
-    #     created_at=customer[3].isoformat(),
-    #     updated_at=customer[4].isoformat()
-    # ) for customer in customer_records]
-
     return {
         "success": True,
         "message": "success",
@@ -48,14 +39,6 @@ async def getCustomer(customer_id: int):
 
     if not customer_records:
         raise HTTPException(status_code=404, detail="Customer not found")
-    
-    # customer = Customer(
-    # customer_id=customer_records[0],
-    # customer_name=customer_records[1],
-    # phone=customer_records[2],
-    # created_at=customer_records[3].isoformat(),
-    # updated_at=customer_records[4].isoformat()
-    # )
 
     return {
         "success": True,
@@ -104,9 +87,6 @@ async def createNewCustomer(customer : Customer):
 
 @customerRouter.put("/customer/{customer_id}")
 async def editCustomer(customer_id: int, phone:str, customer_name: str):
-    # data = await request.json()
-    # phone = data.get("phone")
-    # customer_name = data.get("customer_name")
 
     # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"

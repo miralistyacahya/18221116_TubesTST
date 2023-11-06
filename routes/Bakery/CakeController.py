@@ -23,15 +23,6 @@ async def getAllCake():
     if not cake_records:
         raise HTTPException(status_code=404, detail="Cakes not found")
 
-    # list Cake
-    # cakes = [Cake(
-    #     cake_id=cake[0],
-    #     cake_name=cake[1],
-    #     template_img=cake[2],
-    #     created_at=cake[3].isoformat(),
-    #     updated_at=cake[4].isoformat()
-    # ) for cake in cake_records]
-
     return {
         "success": True,
         "message": "success",
@@ -49,14 +40,6 @@ async def getCake(cake_id: int):
 
     if not cake_records:
         raise HTTPException(status_code=404, detail="Cake not found")
-    
-    # cake = Cake(
-    # cake_id=cake_records[0],
-    # cake_name=cake_records[1],
-    # template_img=cake_records[2],
-    # created_at=cake_records[3].isoformat(),
-    # updated_at=cake_records[4].isoformat()
-    # )
 
     return {
         "success": True,
@@ -96,11 +79,6 @@ async def getCakeIdByName(cake_name: str):
 
 @cakeRouter.post("/cake")
 async def createNewCake(cake : Cake):
-
-    # existing_cake = getCakeIdByName(cake.cake_name)
-
-    # if existing_cake:
-    #     raise HTTPException(status_code=400, detail=f"Cake {cake.cake_name} sudah tersedia")
 
     # cursor = conn.cursor()
     query = "INSERT INTO cakes (cake_name) VALUES (%s)"
