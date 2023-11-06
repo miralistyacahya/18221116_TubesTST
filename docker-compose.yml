@@ -21,7 +21,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - /Users/rara/myapp
+      - /app
 
 #   # MySQL database service
 #   bakerytst-app-db:
