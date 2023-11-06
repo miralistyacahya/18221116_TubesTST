@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Request
 from models.CustomerModel import Customer
 from typing import List
-from db import conn
+from db import cursor, conn
 
 customerRouter = APIRouter(
     tags=["Customer"]
@@ -11,68 +11,68 @@ customer = {}
 
 
 @customerRouter.get("/customer")
-async def getAllCustomer() -> List[Customer]:
-    cursor = conn.cursor()
+async def getAllCustomer():
+    # cursor = conn.cursor()
     query = "SELECT * FROM customers;"
     cursor.execute(query)
     customer_records = cursor.fetchall()
-    cursor.close()
+    # cursor.close()
 
     # kalo error gaada data
     if not customer_records:
         raise HTTPException(status_code=404, detail="Customers not found")
 
     # list Customer
-    customers = [Customer(
-        customer_id=customer[0],
-        customer_name=customer[1],
-        phone=customer[2],
-        created_at=customer[3].isoformat(),
-        updated_at=customer[4].isoformat()
-    ) for customer in customer_records]
+    # customers = [Customer(
+    #     customer_id=customer[0],
+    #     customer_name=customer[1],
+    #     phone=customer[2],
+    #     created_at=customer[3].isoformat(),
+    #     updated_at=customer[4].isoformat()
+    # ) for customer in customer_records]
 
     return {
         "success": True,
         "message": "success",
         "code": 200,
-        "response": customers
+        "response": customer_records
     }
         
 @customerRouter.get("/customer/{customer_id}")
 async def getCustomer(customer_id: int):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
     query = "SELECT customer_id, customer_name, phone, created_at, updated_at FROM customers WHERE customer_id=%s;"
     cursor.execute(query, (customer_id,))
     customer_records = cursor.fetchone()
-    cursor.close() 
+    # cursor.close() 
 
     if not customer_records:
         raise HTTPException(status_code=404, detail="Customer not found")
     
-    customer = Customer(
-    customer_id=customer_records[0],
-    customer_name=customer_records[1],
-    phone=customer_records[2],
-    created_at=customer_records[3].isoformat(),
-    updated_at=customer_records[4].isoformat()
-    )
+    # customer = Customer(
+    # customer_id=customer_records[0],
+    # customer_name=customer_records[1],
+    # phone=customer_records[2],
+    # created_at=customer_records[3].isoformat(),
+    # updated_at=customer_records[4].isoformat()
+    # )
 
     return {
         "success": True,
         "message": "success",
         "code": 200,
-        "response": customer
+        "response": customer_records
     }
 
 @customerRouter.get("/customer/id/{phone}")
 async def getCustomerIdByPhone(phone: str):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE phone=%s;"
     cursor.execute(query, (phone,))
     customer_id = cursor.fetchone()
-    cursor.close() 
+    # cursor.close() 
     if customer_id:
-        return (customer_id[0])
+        return customer_id #(customer_id[0])
     else:
         return None
 
@@ -86,12 +86,12 @@ async def createNewCustomer(customer : Customer):
     # if existing_customer is not None:
     #     raise HTTPException(status_code=400, detail=f"Customer dengan no. telpon {customer.phone} sudah tersedia")
     
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
     query = "INSERT INTO customers (customer_name, phone) VALUES (%s, %s)"
     cursor.execute(query, (customer.customer_name, customer.phone))
     conn.commit()
     customer_id = cursor.lastrowid
-    cursor.close()
+    # cursor.close()
 
     return {
         "success": True,
@@ -108,13 +108,13 @@ async def editCustomer(customer_id: int, phone:str, customer_name: str):
     # phone = data.get("phone")
     # customer_name = data.get("customer_name")
 
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"
     cursor.execute(query, (customer_id,))
     existing_customer = cursor.fetchone()
     
     if not existing_customer:
-        cursor.close()
+        # cursor.close()
         raise HTTPException(status_code=404, detail=f"Customer dengan ID {customer_id} tidak ditemukan")
     
     if customer_name and phone:
@@ -128,7 +128,7 @@ async def editCustomer(customer_id: int, phone:str, customer_name: str):
         cursor.execute(query, (phone, customer_id))
 
     conn.commit()
-    cursor.close()
+    # cursor.close()
 
     return {
         "success": True,
@@ -140,19 +140,19 @@ async def editCustomer(customer_id: int, phone:str, customer_name: str):
 
 @customerRouter.delete("/customer/{customer_id}")
 async def deleteCustomer(customer_id: int):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"
     cursor.execute(query, (customer_id,))
     existing_customer = cursor.fetchone()
     
     if not existing_customer:
-        cursor.close()
+        # cursor.close()
         raise HTTPException(status_code=404, detail=f"Customer dengan ID {customer_id} tidak ditemukan")
 
     query = "DELETE FROM customers WHERE customer_id=%s"
     cursor.execute(query, (customer_id,))
     conn.commit()
-    cursor.close()
+    # cursor.close()
 
     return {
         "success": True,

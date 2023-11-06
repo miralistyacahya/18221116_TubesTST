@@ -12,7 +12,13 @@ railway_db_config = {
     "database": "railway"
 }
 
-conn = mysql.connector.connect(**railway_db_config)
+try:
+    conn = mysql.connector.connect(**railway_db_config)
+    print("Success")
+except mysql.connector.Error as e:
+    print(e)
+else:
+    cursor = conn.cursor()
 
 
 ## mySQL local
