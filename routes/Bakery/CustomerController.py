@@ -64,7 +64,7 @@ async def getCustomer(customer_id: int):
         "response": customer
     }
 
-@customerRouter.get("/customer/phone/{phone}")
+@customerRouter.get("/customer/id/{phone}")
 async def getCustomerIdByPhone(phone: str):
     cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE phone=%s;"
@@ -103,10 +103,10 @@ async def createNewCustomer(customer : Customer):
 
 
 @customerRouter.put("/customer/{customer_id}")
-async def editCustomer(customer_id: int, request: Request):
-    data = await request.json()
-    phone = data.get("phone")
-    customer_name = data.get("customer_name")
+async def editCustomer(customer_id: int, phone:str, customer_name: str):
+    # data = await request.json()
+    # phone = data.get("phone")
+    # customer_name = data.get("customer_name")
 
     cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"

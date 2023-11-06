@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Request
 from models.CakeModel import Cake
 from typing import List
 from db import conn
+from starlette.responses import HTMLResponse
 
 cakeRouter = APIRouter(
     tags=["Cake"]
@@ -64,8 +65,8 @@ async def getCake(cake_id: int):
         "response": cake
     } 
 
-@cakeRouter.get("/cake/template/{cake_id}")
-async def getCakeTemplate(cake_id: int):
+@cakeRouter.get("/cake/{cake_id}/template", response_class=HTMLResponse)
+async def chooseCake(cake_id: int):
     cursor = conn.cursor()
     query = "SELECT template_img FROM cakes WHERE cake_id=%s;"
     cursor.execute(query, (cake_id,))
@@ -73,11 +74,12 @@ async def getCakeTemplate(cake_id: int):
     cursor.close() 
 
     if cake_template:
-        return cake_template[0]
+        img_html = f'<img src="{cake_template[0]}", alt="Cake Template">'
+        return img_html
     else:
         raise HTTPException(status_code=404, detail="Cake not found") 
 
-@cakeRouter.get("/cake/name/{cake_name}")
+@cakeRouter.get("/cake/id/{cake_name}")
 async def getCakeIdByName(cake_name: str):
     cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_name=%s;"
@@ -115,9 +117,7 @@ async def createNewCake(cake : Cake):
 
 
 @cakeRouter.put("/cake/{cake_id}")
-async def editCake(cake_id: int, request: Request):
-    data = await request.json()
-    cake_name = data.get("cake_name")
+async def editCake(cake_id: int, cake_name: str):
 
     cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_id=%s"

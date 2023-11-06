@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE cakes (
     cake_id int AUTO_INCREMENT PRIMARY KEY,
     cake_name varchar(255) NOT NULL,
-    template_img varchar(255) DEFAULT 'b5b7620a880375e1.jpg',
+    template_img varchar(255) DEFAULT 'https://drive.google.com/file/d/1aJPDb7_U_X_0VT7HRkzZTUw2RMz2P98s/view?usp=drive_link',
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp ON UPDATE CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

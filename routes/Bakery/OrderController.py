@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException, status, File, UploadFile, Request
-from pathlib import Path
 from models.OrderModel import Order
 from typing import List
 from db import conn
 import shutil
 import uuid
 import os
+import io
 from imghdr import what
-from routes.Bakery.CakeController import getCakeIdByName
-from routes.Bakery.CustomerController import getCustomerIdByPhone, createNewCustomer
+from pydrive2.auth import GoogleAuth
+from pydrive2.drive import GoogleDrive
+from PIL import Image
 
 
 orderRouter = APIRouter(
@@ -123,44 +124,44 @@ async def createOrder(request: Request):
             raise HTTPException(status_code=404, detail=f"Terjadi kesalahan: {str(e)}")
 
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR")
-@orderRouter.put("/order/image/{order_id}")
+
+
+
+@orderRouter.put("/order/{order_id}/image")
 async def addImage(order_id: int, file: UploadFile = File(...)):
     try:
-        # data = await request.form()
-        # cake_img = data.get("cake_img")
+        
         allowed_image_types = ["jpeg", "jpg", "png"]
-        print(file.filename)
+        
         file_type = (file.filename.split("."))[1]
 
         if file_type not in allowed_image_types:
             raise HTTPException(status_code=400, detail="Format file tidak sesuai")
-        print(file_type)
-        file.filename = f"{uuid.uuid4()}.{file_type}"
-        print(file.filename)
         
-        img_link = f"{UPLOAD_DIR}{file.filename}"
-        try:
-            contents = await file.read()
-            with open(img_link, "wb+") as f:
-                # while contents := file.file.read():
-                # shutil.copyfileobj(contents.file, f)
-                f.write(contents)
-            # async with aiofiles.open(file.file)
-        except Exception:
-            return{"message: Error uploading"}
-        finally:
-            file.file.close()
+        file.filename = f"{uuid.uuid4()}.{file_type}"
+
+        # UPLOAD_DIR = os.getenv("UPLOAD_DIR")
+        # img_link = f"{UPLOAD_DIR}{file.filename}"
+        # try:
+        #     contents = await file.read()
+        #     with open(img_link, "wb+") as f:
+        #         f.write(contents)
+            
+            
+        # except Exception:
+        #     return{"message: Error uploading"}
+        # finally:
+        #     file.file.close()
             
                 # shutil.copyfileobj(cake_img.file, buffer)
                 # print(cake_img.file.read)
-        if img_link is None:
-            img_link = None
-            raise HTTPException(status_code=400, detail="Cake image tidak berhasil disimpan")
+        # if url is None:
+        #     # img_link = None
+        #     raise HTTPException(status_code=400, detail="Cake image tidak berhasil disimpan")
         
         cursor = conn.cursor()
         query = "UPDATE orders set cake_img = %s WHERE order_id = %s"
-        cursor.execute(query, (img_link, order_id))
+        cursor.execute(query, (file.filename, order_id))
         conn.commit()
         cursor.close()
 
