@@ -1,11 +1,14 @@
-from fastapi import APIRouter, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, HTTPException, status, File, UploadFile, Request
 from pathlib import Path
 from models.OrderModel import Order
 from typing import List
 from db import conn
 import shutil
-from CakeController import getCakeIdByName
-from CustomerController import getCustomerIdByPhone, createNewCustomer
+import uuid
+import os
+from imghdr import what
+from routes.Bakery.CakeController import getCakeIdByName
+from routes.Bakery.CustomerController import getCustomerIdByPhone, createNewCustomer
 
 
 orderRouter = APIRouter(
@@ -47,53 +50,6 @@ async def getAllOrder() -> List[Order]:
         "response": orders
     }   
     
-
-
-UPLOAD_DIR = "storage/design"
-
-@orderRouter.post("/order")
-async def createOrder(customer_name: str, phone:str, cake_name:str, order_date: str, pickup_date: str, order_status: str, addr: str, cake_img: UploadFile):
-    if cake_img:
-        img_link = f"{UPLOAD_DIR}/{cake_img.filename}"
-
-        with open(img_link, "wb") as buffer:
-            shutil.copyfileobj(cake_img.file, buffer)
-    else:
-        img_link = None
-    
-    cake_id = getCakeIdByName(cake_name)
-    if cake_id is None:
-        raise HTTPException(status_code=400, detail="Cake tidak tersedia pada bakery")
-    
-    customer_id = getCustomerIdByPhone(phone)
-    if customer_id is None:
-        result = createNewCustomer(customer_name, phone)
-        customer_id = result["customer_id"]
-
-    order = Order(
-        customer_id=customer_id,
-        cake_id=cake_id,
-        order_date=order_date,
-        pickup_date=pickup_date,
-        order_status=order_status,
-        addr=addr,
-        cake_img=img_link
-    )
-
-    cursor = conn.cursor()
-    query = "INSERT INTO orders (customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-    cursor.execute(query, (order.customer_id, order.cake_id, order.order_date, order.pickup_date, order.order_status, order.addr, order.cake_img))
-    conn.commit()
-    cursor.close()
-
-    return {
-        "success": True,
-        "message": "Order berhasil dibuat",
-        "code": 200
-    }
-
-
-
 @orderRouter.get("/order/{order_id}")
 async def getOrder(order_id: int):
     cursor = conn.cursor()
@@ -124,6 +80,98 @@ async def getOrder(order_id: int):
         "code": 200,
         "response": order
     }
+
+
+
+@orderRouter.post("/order")
+async def createOrder(request: Request):
+    try:
+        data = await request.json()
+        customer_id = data.get("customer_id")
+        cake_id = data.get("cake_id")
+        order_date = data.get("order_date")
+        pickup_date = data.get("pickup_date")
+        order_status = data.get("order_status")
+        addr = data.get("addr")
+        
+        order = Order(
+            customer_id=customer_id,
+            cake_id=cake_id,
+            order_date=order_date,
+            pickup_date=pickup_date,
+            order_status=order_status,
+            addr=addr
+        )
+
+        cursor = conn.cursor()
+        query = "INSERT INTO orders (customer_id, cake_id, order_date, pickup_date, order_status, addr) VALUES (%s, %s, %s, %s, %s, %s)"
+        cursor.execute(query, (order.customer_id, order.cake_id, order.order_date, order.pickup_date, order.order_status, order.addr))
+        conn.commit()
+        cursor.close()
+
+        return {
+            "success": True,
+            "message": "Order berhasil dibuat",
+            "code": 200
+        }  
+    except Exception as e:
+        if "cake_id" in str(e):
+            raise HTTPException(status_code=400, detail="Cake tidak tersedia pada bakery")
+        if "customer_id" in str(e):
+            raise HTTPException(status_code=400, detail="Customer tidak ditemukan")
+        else:
+            raise HTTPException(status_code=404, detail=f"Terjadi kesalahan: {str(e)}")
+
+
+UPLOAD_DIR = os.getenv("UPLOAD_DIR")
+@orderRouter.put("/order/image/{order_id}")
+async def addImage(order_id: int, file: UploadFile = File(...)):
+    try:
+        # data = await request.form()
+        # cake_img = data.get("cake_img")
+        allowed_image_types = ["jpeg", "jpg", "png"]
+        print(file.filename)
+        file_type = (file.filename.split("."))[1]
+
+        if file_type not in allowed_image_types:
+            raise HTTPException(status_code=400, detail="Format file tidak sesuai")
+        print(file_type)
+        file.filename = f"{uuid.uuid4()}.{file_type}"
+        print(file.filename)
+        
+        img_link = f"{UPLOAD_DIR}{file.filename}"
+        try:
+            contents = await file.read()
+            with open(img_link, "wb+") as f:
+                # while contents := file.file.read():
+                # shutil.copyfileobj(contents.file, f)
+                f.write(contents)
+            # async with aiofiles.open(file.file)
+        except Exception:
+            return{"message: Error uploading"}
+        finally:
+            file.file.close()
+            
+                # shutil.copyfileobj(cake_img.file, buffer)
+                # print(cake_img.file.read)
+        if img_link is None:
+            img_link = None
+            raise HTTPException(status_code=400, detail="Cake image tidak berhasil disimpan")
+        
+        cursor = conn.cursor()
+        query = "UPDATE orders set cake_img = %s WHERE order_id = %s"
+        cursor.execute(query, (img_link, order_id))
+        conn.commit()
+        cursor.close()
+
+        return {
+            "success": True,
+            "message": "Design kue berhasil ditambahkan",
+            "code": 200
+        }
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        raise HTTPException(status_code=404, detail=f"Terjadi kesalahan: {str(e)}")
 
 
 @orderRouter.delete("/order/{order_id}")

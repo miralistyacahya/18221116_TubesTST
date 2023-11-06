@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from models.CustomerModel import Customer
 from typing import List
 from db import conn
@@ -64,16 +64,15 @@ async def getCustomer(customer_id: int):
         "response": customer
     }
 
-@customerRouter.get("/customer/{phone}")
+@customerRouter.get("/customer/phone/{phone}")
 async def getCustomerIdByPhone(phone: str):
     cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE phone=%s;"
     cursor.execute(query, (phone,))
     customer_id = cursor.fetchone()
     cursor.close() 
-
     if customer_id:
-        return customer_id[0]
+        return (customer_id[0])
     else:
         return None
 
@@ -104,7 +103,11 @@ async def createNewCustomer(customer : Customer):
 
 
 @customerRouter.put("/customer/{customer_id}")
-async def editCustomer(customer_id: int, customer: Customer):
+async def editCustomer(customer_id: int, request: Request):
+    data = await request.json()
+    phone = data.get("phone")
+    customer_name = data.get("customer_name")
+
     cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"
     cursor.execute(query, (customer_id,))
@@ -114,15 +117,15 @@ async def editCustomer(customer_id: int, customer: Customer):
         cursor.close()
         raise HTTPException(status_code=404, detail=f"Customer dengan ID {customer_id} tidak ditemukan")
     
-    if customer.customer_name and customer.phone:
+    if customer_name and phone:
         query = "UPDATE customers SET customer_name=%s, phone=%s WHERE customer_id=%s"
-        cursor.execute(query, (customer.customer_name, customer.phone, customer_id))
-    elif customer.customer_name: # Mengubah hanya customer_name
+        cursor.execute(query, (customer_name, phone, customer_id))
+    elif customer_name: # Mengubah hanya customer_name
         query = "UPDATE customers SET customer_name=%s WHERE customer_id=%s"
-        cursor.execute(query, (customer.customer_name, customer_id))
-    elif customer.phone:  # Mengubah hanya phone
+        cursor.execute(query, (customer_name, customer_id))
+    elif phone:  # Mengubah hanya phone
         query = "UPDATE customers SET phone=%s WHERE customer_id=%s"
-        cursor.execute(query, (customer.phone, customer_id))
+        cursor.execute(query, (phone, customer_id))
 
     conn.commit()
     cursor.close()

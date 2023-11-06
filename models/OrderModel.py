@@ -11,15 +11,16 @@ class Order(BaseModel):
     pickup_date: str
     order_status: str
     addr: Optional[str]
-    cake_img: str
+    cake_img: Optional[str]
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
     class Config:
         json_schema_extra = {
             "example": {
+                "order_id": 1,
                 "customer_id": 1,
-                "xake_id": 1,
+                "cake_id": 1,
                 "order_date": "2023-03-12",
                 "pickup_date":"2023-03-21",
                 "order_status": "Delivery",

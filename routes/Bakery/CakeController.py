@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from models.CakeModel import Cake
 from typing import List
 from db import conn
@@ -77,7 +77,7 @@ async def getCakeTemplate(cake_id: int):
     else:
         raise HTTPException(status_code=404, detail="Cake not found") 
 
-@cakeRouter.get("/cake/{cake_name}")
+@cakeRouter.get("/cake/name/{cake_name}")
 async def getCakeIdByName(cake_name: str):
     cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_name=%s;"
@@ -86,7 +86,7 @@ async def getCakeIdByName(cake_name: str):
     cursor.close() 
 
     if cake_id:
-        return cake_id[0]
+        return int(cake_id[0])
     else:
         return None
 
@@ -115,7 +115,10 @@ async def createNewCake(cake : Cake):
 
 
 @cakeRouter.put("/cake/{cake_id}")
-async def editCake(cake_id: int, cake: Cake):
+async def editCake(cake_id: int, request: Request):
+    data = await request.json()
+    cake_name = data.get("cake_name")
+
     cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_id=%s"
     cursor.execute(query, (cake_id,))
@@ -125,15 +128,10 @@ async def editCake(cake_id: int, cake: Cake):
         cursor.close()
         raise HTTPException(status_code=404, detail=f"Cake dengan ID {cake_id} tidak ditemukan")
     
-    if cake.cake_name and cake.template_img:
-        query = "UPDATE cakes SET cake_name=%s, template_img=%s WHERE cake_id=%s"
-        cursor.execute(query, (cake.cake_name, cake.template_img, cake_id))
-    elif cake.cake_name: # hanya mengubah nama
+    if cake_name: # hanya mengubah nama
         query = "UPDATE cakes SET cake_name=%s WHERE cake_id=%s"
-        cursor.execute(query, (cake.cake_name, cake_id))
-    elif cake.template_img: # hanya mengubah template
-        query = "UPDATE cakes SET template_img=%s WHERE cake_id=%s"
-        cursor.execute(query, (cake.template_img, cake_id))
+        cursor.execute(query, (cake_name, cake_id))
+
 
     conn.commit()
     cursor.close()
