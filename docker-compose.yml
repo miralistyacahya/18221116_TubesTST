@@ -1,19 +1,6 @@
 version: '3.8'
 services:
-
-  # bakerytst-app:
-  #   container_name: bakerytst-app
-  #   image: bakerytst-app:latest
-  #   hostname: bakerytst-app
-  #   ports:
-  #     - "8600:8600"
-  #   env_file:
-  #     - .env
-  #   depends_on:
-  #     bakerytst-app-db:
-  #       condition: service_healthy
-  #   networks:
-  #     - bakerytst-app
+  # kalo connect database railway
   bakerytst-app:
     build:
       context: .
@@ -22,8 +9,23 @@ services:
       - 8080:8080
     volumes:
       - /app
+    
+#   ## kalo pake mysql di container
+#   bakerytst-app:
+#     container_name: bakerytst-app
+#     image: bakerytst-app:latest
+#     hostname: bakerytst-app
+#     ports:
+#       - "8080:8080"
+#     env_file:
+#       - .env
+#     depends_on:
+#       bakerytst-app-db:
+#         condition: service_healthy
+#     networks:
+#       - bakerytst-app
 
-#   # MySQL database service
+# #   # MySQL database service
 #   bakerytst-app-db:
 #     container_name: bakerytst-app-db
 #     image: mysql:latest
@@ -31,7 +33,7 @@ services:
 #     env_file:
 #       - .env
 #     ports:
-#       - "3307:3306"
+#       - "3308:3306"
 #     volumes:
 #       - ./mysql:/var/lib/mysql
 #       - ./init/init.sql:/docker-entrypoint-initdb.d/init.sql

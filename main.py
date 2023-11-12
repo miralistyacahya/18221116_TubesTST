@@ -4,9 +4,11 @@ import mysql.connector
 from routes.Bakery.CakeController import cakeRouter
 from routes.Bakery.CustomerController import customerRouter
 from routes.Bakery.OrderController import orderRouter
+from routes.auth.auth import authRouter
 
 app = FastAPI()
 
+app.include_router(authRouter)
 app.include_router(cakeRouter)
 app.include_router(customerRouter)
 app.include_router(orderRouter)

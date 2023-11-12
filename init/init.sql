@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS cakes;
 DROP TABLE IF EXISTS customers;
 DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS users;
 
 CREATE TABLE cakes (
     cake_id int AUTO_INCREMENT PRIMARY KEY,
@@ -33,6 +34,13 @@ CREATE TABLE orders (
     FOREIGN KEY (cake_id) REFERENCES cakes(cake_id)
 );
     
+CREATE TABLE users (
+    username varchar(255),
+    name varchar(255),
+    email varchar(255) PRIMARY KEY,
+    password varchar(255)
+);
+
 INSERT INTO cakes (cake_name, template_img) VALUES
     ('Red Velvet Sponge Cake', 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg'),
     ('Lotus Cheese Cake', 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg'),
@@ -43,3 +51,6 @@ INSERT INTO customers(customer_name, phone) VALUES
 
 INSERT INTO orders(customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img) VALUES
     (1, 1, '2023-03-12', '2023-03-21', 'Delivery', 'Jl. Dago Asri III No. 21', '0f4b49b8d1863d55.jpg');
+
+INSERT INTO users (username, name, email, password) VALUES
+    ('lalala', 'lala', 'lalala@gmail.com', 'syalalala');
