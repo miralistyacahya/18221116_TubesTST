@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS orders;
 CREATE TABLE cakes (
     cake_id int AUTO_INCREMENT PRIMARY KEY,
     cake_name varchar(255) NOT NULL,
-    template_img varchar(255) DEFAULT 'https://drive.google.com/file/d/1aJPDb7_U_X_0VT7HRkzZTUw2RMz2P98s/view?usp=drive_link',
+    template_img varchar(255) DEFAULT 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg',
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp ON UPDATE CURRENT_TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -34,9 +34,9 @@ CREATE TABLE orders (
 );
     
 INSERT INTO cakes (cake_name, template_img) VALUES
-    ('Red Velvet Sponge Cake', 'b5b7620a880375e1.jpg'),
-    ('Lotus Cheese Cake', 'b5b7620a880375e1.jpg'),
-    ('Original Cheese Cake', 'b5b7620a880375e1.jpg');
+    ('Red Velvet Sponge Cake', 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg'),
+    ('Lotus Cheese Cake', 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg'),
+    ('Original Cheese Cake', 'https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg');
 
 INSERT INTO customers(customer_name, phone) VALUES
     ('pipo', '0812345667');

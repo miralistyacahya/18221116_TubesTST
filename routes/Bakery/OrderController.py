@@ -1,14 +1,15 @@
 from fastapi import APIRouter, HTTPException, status, File, UploadFile, Request
+from fastapi.responses import FileResponse, StreamingResponse
 from models.OrderModel import Order
 from typing import List
 from db import cursor, conn
 import uuid
-import shutil
-# from imghdr import what
-# from pydrive2.auth import GoogleAuth
-# from pydrive2.drive import GoogleDrive
-# from PIL import Image
-
+import os
+import json
+from google.cloud import storage
+import io
+from PIL import Image
+from io import BytesIO
 
 orderRouter = APIRouter(
     tags=["Order"]
@@ -53,15 +54,58 @@ async def getOrder(order_id: int):
         "response": order_records
     }
 
+@orderRouter.get("/order/{order_id}/design", response_class=FileResponse)
+async def getDesign(order_id: int):
+    # cursor = conn.cursor()
+    query = "SELECT cake_img FROM orders WHERE order_id=%s;"
+    cursor.execute(query, (order_id,))
+    cake_design = cursor.fetchone()
+    # cursor.close() 
+
+    if cake_design:
+       
+        try:
+            # GCS environment yang di set di env
+            credentials_json = os.getenv("GCS_CREDENTIALS")
+            # diubah (decode) menjadi JSON lagi
+            decoded_json = json.loads(credentials_json)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error loading GCS credentials: {str(e)}")
+        
+        # connect dengan bucket di GSC bismillah ga error
+        client = storage.Client.from_service_account_info(decoded_json)
+        GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+        bucket = client.get_bucket(GCS_BUCKET_NAME)
+
+        # mengambil link image dari database, hanya butuh nama file aja
+        path = os.path.basename(cake_design[0])
+        blob = bucket.blob(path)
+
+        # Cek blob
+        if not blob.exists():
+            raise HTTPException(status_code=404, detail="Image not found")
+        try:
+            # open image dari bucker
+            img_bytes = blob.download_as_bytes()
+            img = Image.open(BytesIO(img_bytes))
+            img_byte_arr = BytesIO()
+            img.save(img_byte_arr, format="JPEG")
+            im = img_byte_arr.getvalue()
+            # menampilkan image bisa plis T T
+            return StreamingResponse(io.BytesIO(im), media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=cake_design.jpeg"})
+        
+        except (IOError, Image.UnidentifiedImageError) as e:
+            print(f"Error opening image: {e}")
+
 
 
 @orderRouter.post("/order")
-async def createOrder(customer_id: int, cake_id: int, order_date: str, pickup_date: str, order_status: str, addr: str):
+async def createOrder(order: Order): 
     try:
 
         # cursor = conn.cursor()
         query = "INSERT INTO orders (customer_id, cake_id, order_date, pickup_date, order_status, addr) VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute(query, (customer_id, cake_id, order_date, pickup_date, order_status, addr))
+        cursor.execute(query, (order.customer_id, order.cake_id, order.order_date, order.pickup_date, order.order_status, order.addr))
         conn.commit()
         order_id = cursor.lastrowid
         # cursor.close()
@@ -82,9 +126,7 @@ async def createOrder(customer_id: int, cake_id: int, order_date: str, pickup_da
 
 
 
-
-
-@orderRouter.put("/order/{order_id}/image")
+@orderRouter.patch("/order/{order_id}/image")
 async def addImage(order_id: int, file: UploadFile = File(...)):
     try:
         # cursor = conn.cursor()
@@ -105,39 +147,40 @@ async def addImage(order_id: int, file: UploadFile = File(...)):
         
         file.filename = f"{uuid.uuid4()}.{file_type}"
 
-        # UPLOAD_DIR = os.getenv("UPLOAD_DIR")
-        # img_link = f"{UPLOAD_DIR}{file.filename}"
-        # try:
-        #     contents = await file.read()
-        #     with open(img_link, "wb+") as f:
-        #         f.write(contents)
-            
-            
-        # except Exception:
-        #     return{"message: Error uploading"}
-        # finally:
-        #     file.file.close()
-            
-                # shutil.copyfileobj(cake_img.file, buffer)
-                # print(cake_img.file.read)
-        # if url is None:
-        #     # img_link = None
-        #     raise HTTPException(status_code=400, detail="Cake image tidak berhasil disimpan")
+        try:
+            # GCS environment yang di set di env
+            credentials_json = os.getenv("GCS_CREDENTIALS")
+            # diubah (decode) menjadi JSON lagi
+            decoded_json = json.loads(credentials_json)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error loading GCS credentials: {str(e)}")
+        
+        # connect dengan bucket di GSC bismillah ga error
+        client = storage.Client.from_service_account_info(decoded_json)
+        GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+        bucket = client.get_bucket(GCS_BUCKET_NAME)
+
+        # set file path dan upload yuk bisa yuk
+        file_path = file.filename
+        blob = bucket.blob(file_path)
+        blob.upload_from_file(file.file, content_type='image/jpeg')
+        img_url = f'https://storage.googleapis.com/{GCS_BUCKET_NAME}/{file_path}'
         
         # cursor = conn.cursor()
         query = "UPDATE orders set cake_img = %s WHERE order_id = %s"
-        cursor.execute(query, (file.filename, order_id))
+        cursor.execute(query, (img_url, order_id))
         conn.commit()
         # cursor.close()
 
         return {
             "success": True,
-            "message": f"Design kue berhasil ditambahkan pada {file.filename}",
+            "message": f"Design kue berhasil ditambahkan pada {img_url}",
             "code": 200
         }
     except Exception as e:
         print(f"Error: {str(e)}")
         raise HTTPException(status_code=404, detail=f"Terjadi kesalahan: {str(e)}")
+
 
 
 @orderRouter.delete("/order/{order_id}")

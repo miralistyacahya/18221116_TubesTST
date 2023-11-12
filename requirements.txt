@@ -3,3 +3,6 @@ fastapi==0.68.0
 mysqlclient==2.0.3
 mysql-connector-python==8.2.0
 python-multipart==0.0.6
+aiofiles==23.2.1
+google-cloud-storage==2.13.0
+Pillow==10.1.0

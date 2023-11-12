@@ -13,6 +13,6 @@ class Cake(BaseModel):
             "example": {
                 "cake_id": 1,
                 "cake_name": "Red Velvet Sponge Cake",
-                "template_img": "b5b7620a880375e1.jpg"
+                "template_img": "https://storage.googleapis.com/bakery-tst-bucket/d72a7271-1cf4-4cd4-b60b-97490d26a355.jpeg"
             }
         }

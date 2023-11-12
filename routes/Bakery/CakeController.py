@@ -1,8 +1,14 @@
 from fastapi import APIRouter, HTTPException, status, Request
+from fastapi.responses import FileResponse, StreamingResponse
 from models.CakeModel import Cake
 from typing import List
 from db import cursor, conn
-from starlette.responses import HTMLResponse
+from google.cloud import storage
+import os
+import json
+import io
+from PIL import Image
+from io import BytesIO
 
 cakeRouter = APIRouter(
     tags=["Cake"]
@@ -48,7 +54,7 @@ async def getCake(cake_id: int):
         "response": cake_records
     } 
 
-@cakeRouter.get("/cake/{cake_id}/template", response_class=HTMLResponse)
+@cakeRouter.get("/cake/{cake_id}/template", response_class=FileResponse)
 async def chooseCake(cake_id: int):
     # cursor = conn.cursor()
     query = "SELECT template_img FROM cakes WHERE cake_id=%s;"
@@ -57,10 +63,39 @@ async def chooseCake(cake_id: int):
     # cursor.close() 
 
     if cake_template:
-        img_html = f'<img src="{cake_template[0]}", alt="Cake Template">'
-        return img_html
-    else:
-        raise HTTPException(status_code=404, detail="Cake not found") 
+       
+        try:
+            # GCS environment yang di set di env
+            credentials_json = os.getenv("GCS_CREDENTIALS")
+            # diubah (decode) menjadi JSON lagi
+            decoded_json = json.loads(credentials_json)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error loading GCS credentials: {str(e)}")
+        
+        # connect dengan bucket di GSC bismillah ga error
+        client = storage.Client.from_service_account_info(decoded_json)
+        GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+        bucket = client.get_bucket(GCS_BUCKET_NAME)
+
+        # mengambil link image dari database, hanya butuh nama file aja
+        path = os.path.basename(cake_template[0])
+        blob = bucket.blob(path)
+
+        # Cek blob
+        if not blob.exists():
+            raise HTTPException(status_code=404, detail="Image not found")
+        try:
+            # open image dari bucker
+            img_bytes = blob.download_as_bytes()
+            img = Image.open(BytesIO(img_bytes))
+            img_byte_arr = BytesIO()
+            img.save(img_byte_arr, format="JPEG")
+            im = img_byte_arr.getvalue()
+            # menampilkan image bisa plis T T
+            return StreamingResponse(io.BytesIO(im), media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=cake_image.jpeg"})
+        
+        except (IOError, Image.UnidentifiedImageError) as e:
+            print(f"Error opening image: {e}")
 
 @cakeRouter.get("/cake/id/{cake_name}")
 async def getCakeIdByName(cake_name: str):
@@ -96,7 +131,7 @@ async def createNewCake(cake : Cake):
 
 
 
-@cakeRouter.put("/cake/{cake_id}")
+@cakeRouter.patch("/cake/{cake_id}")
 async def editCake(cake_id: int, cake_name: str):
 
     # cursor = conn.cursor()
@@ -105,7 +140,7 @@ async def editCake(cake_id: int, cake_name: str):
     existing_cake = cursor.fetchone()
     
     if not existing_cake:
-        cursor.close()
+        # cursor.close()
         raise HTTPException(status_code=404, detail=f"Cake dengan ID {cake_id} tidak ditemukan")
     
     if cake_name: # hanya mengubah nama

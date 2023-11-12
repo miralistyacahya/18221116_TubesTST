@@ -85,7 +85,7 @@ async def createNewCustomer(customer : Customer):
 
 
 
-@customerRouter.put("/customer/{customer_id}")
+@customerRouter.patch("/customer/{customer_id}")
 async def editCustomer(customer_id: int, phone:str, customer_name: str):
 
     # cursor = conn.cursor()
