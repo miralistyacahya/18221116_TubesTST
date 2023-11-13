@@ -102,7 +102,7 @@ async def getDesign(order_id: int):
 
 @orderRouter.get("/order/recommendation")
 async def getRecommendation():
-    query = "SELECT cake_id, COUNT(*) as order_count FROM orders GROUP BY cake_id ORDER BY order_count desc LIMIT 1;"
+    query = "With getMost as (SELECT cake_id, COUNT(*) as order_count FROM orders GROUP BY cake_id ORDER BY order_count desc LIMIT 1) select cake_id from getMost;"
     cursor.execute(query)
     order_counts = cursor.fetchone()
 
