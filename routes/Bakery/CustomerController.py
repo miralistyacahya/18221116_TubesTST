@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, Depends
 from models.CustomerModel import Customer
+from models.userModel import User
+from routes.auth.auth import get_current_user
 from typing import List
 from db import cursor, conn
 
@@ -11,7 +13,7 @@ customer = {}
 
 
 @customerRouter.get("/customer")
-async def getAllCustomer():
+async def getAllCustomer(user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT * FROM customers;"
     cursor.execute(query)
@@ -48,7 +50,7 @@ async def getCustomer(customer_id: int):
     }
 
 @customerRouter.get("/customer/id/{phone}")
-async def getCustomerIdByPhone(phone: str):
+async def getCustomerIdByPhone(phone: str, user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE phone=%s;"
     cursor.execute(query, (phone,))
@@ -86,7 +88,7 @@ async def createNewCustomer(customer : Customer):
 
 
 @customerRouter.patch("/customer/{customer_id}")
-async def editCustomer(customer_id: int, phone:str, customer_name: str):
+async def editCustomer(customer_id: int, phone:str, customer_name: str, user : User = Depends(get_current_user)):
 
     # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"
@@ -119,7 +121,7 @@ async def editCustomer(customer_id: int, phone:str, customer_name: str):
 
 
 @customerRouter.delete("/customer/{customer_id}")
-async def deleteCustomer(customer_id: int):
+async def deleteCustomer(customer_id: int, user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT customer_id FROM customers WHERE customer_id=%s"
     cursor.execute(query, (customer_id,))

@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, status, Request, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from models.CakeModel import Cake
+from models.userModel import User
+from routes.auth.auth import get_current_user
 from typing import List
 from db import cursor, conn
 from google.cloud import storage
@@ -113,7 +115,7 @@ async def getCakeIdByName(cake_name: str):
 
 
 @cakeRouter.post("/cake")
-async def createNewCake(cake : Cake):
+async def createNewCake(cake : Cake, user : User = Depends(get_current_user)):
 
     # cursor = conn.cursor()
     query = "INSERT INTO cakes (cake_name) VALUES (%s)"
@@ -132,7 +134,7 @@ async def createNewCake(cake : Cake):
 
 
 @cakeRouter.patch("/cake/{cake_id}")
-async def editCake(cake_id: int, cake_name: str):
+async def editCake(cake_id: int, cake_name: str, user : User = Depends(get_current_user)):
 
     # cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_id=%s"
@@ -160,7 +162,7 @@ async def editCake(cake_id: int, cake_name: str):
 
 
 @cakeRouter.delete("/cake/{cake_id}")
-async def deleteCake(cake_id: int):
+async def deleteCake(cake_id: int, user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT cake_id FROM cakes WHERE cake_id=%s"
     cursor.execute(query, (cake_id,))

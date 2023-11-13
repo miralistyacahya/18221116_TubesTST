@@ -39,7 +39,7 @@ async def getAllOrder(user : User = Depends(get_current_user)):
     }   
     
 @orderRouter.get("/order/{order_id}")
-async def getOrder(order_id: int, user : User = Depends(get_current_user)):
+async def getOrder(order_id: int):
     # cursor = conn.cursor()
     query = "SELECT order_id, customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img, created_at, updated_at FROM orders WHERE order_id=%s;"
     cursor.execute(query, (order_id,))
