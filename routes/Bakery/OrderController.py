@@ -99,6 +99,60 @@ async def getDesign(order_id: int):
         except (IOError, Image.UnidentifiedImageError) as e:
             print(f"Error opening image: {e}")
 
+@orderRouter.get("/order/recommendation")
+async def getRecommendation():
+    query = "SELECT cake_id, COUNT(*) as order_count FROM orders GROUP BY cake_id ORDER BY order_count desc LIMIT 1"
+    cursor.execute(query)
+    order_counts = cursor.fetchall()
+
+    if not order_counts:
+        raise HTTPException(status_code=400, detail="Belum ada rekomendasi yang dapat diberikan")
+    
+    mostOrderedId = order_counts[0][0]
+
+    query = "SELECT cake_name, cake_img FROM cakes join orders ON cakes.cake_id = orders.cake_id WHERE cakes.cake_id = %s ORDER BY order_date DESC LIMIT 1"
+    cursor.execute(query, (mostOrderedId,))
+    mostOrderedInfo = cursor.fetchone()
+
+    if not mostOrderedInfo:
+        raise HTTPException(status_code=400, detail="Belum ada rekomendasi yang dapat diberikan")
+    
+    try:
+        # GCS environment yang di set di env
+        credentials_json = os.getenv("GCS_CREDENTIALS")
+        # diubah (decode) menjadi JSON lagi
+        decoded_json = json.loads(credentials_json)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading GCS credentials: {str(e)}")
+        
+    # connect dengan bucket di GSC bismillah ga error
+    client = storage.Client.from_service_account_info(decoded_json)
+    GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+    bucket = client.get_bucket(GCS_BUCKET_NAME)
+
+    # mengambil link image dari database, hanya butuh nama file aja
+    path = os.path.basename(mostOrderedInfo[1])
+    blob = bucket.blob(path)
+
+    # Cek blob
+    if not blob.exists():
+        raise HTTPException(status_code=404, detail="Image not found")
+    try:
+        # open image dari bucker
+        img_bytes = blob.download_as_bytes()
+        img = Image.open(BytesIO(img_bytes))
+        img_byte_arr = BytesIO()
+        img.save(img_byte_arr, format="JPEG")
+        im = img_byte_arr.getvalue()
+        # menampilkan image bisa plis T T
+        return {
+            "cake_name": mostOrderedInfo[0],
+            "design reference": StreamingResponse(io.BytesIO(im), media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=cake_design.jpeg"})
+        }
+        
+    except (IOError, Image.UnidentifiedImageError) as e:
+        print(f"Error opening image: {e}")        
+
 
 
 @orderRouter.post("/order")
