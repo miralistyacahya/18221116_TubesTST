@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, File, UploadFile, Request
+from fastapi import APIRouter, HTTPException, status, File, UploadFile, Request, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from models.OrderModel import Order
+from models.userModel import User
+from routes.auth.auth import get_current_user
 from typing import List
 from db import cursor, conn
 import uuid
@@ -18,7 +20,7 @@ orderRouter = APIRouter(
 order = {}
 
 @orderRouter.get("/order")
-async def getAllOrder():
+async def getAllOrder(user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT * FROM orders;"
     cursor.execute(query)
@@ -37,7 +39,7 @@ async def getAllOrder():
     }   
     
 @orderRouter.get("/order/{order_id}")
-async def getOrder(order_id: int):
+async def getOrder(order_id: int, user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT order_id, customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img, created_at, updated_at FROM orders WHERE order_id=%s;"
     cursor.execute(query, (order_id,))
@@ -184,7 +186,7 @@ async def addImage(order_id: int, file: UploadFile = File(...)):
 
 
 @orderRouter.delete("/order/{order_id}")
-async def deleteOrder(order_id: int):
+async def deleteOrder(order_id: int, user : User = Depends(get_current_user)):
     # cursor = conn.cursor()
     query = "SELECT order_id FROM orders WHERE order_id=%s"
     cursor.execute(query, (order_id,))
