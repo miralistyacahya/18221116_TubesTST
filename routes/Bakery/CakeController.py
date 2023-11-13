@@ -94,7 +94,8 @@ async def chooseCake(cake_id: int):
             img.save(img_byte_arr, format="JPEG")
             im = img_byte_arr.getvalue()
             # menampilkan image bisa plis T T
-            return StreamingResponse(io.BytesIO(im), media_type="image/jpeg", headers={"Content-Disposition": "inline; filename=cake_image.jpeg"})
+            return StreamingResponse(io.BytesIO(im), media_type="image/jpeg", 
+                                     headers={"Content-Disposition": "inline; filename=cake_image.jpeg"})
         
         except (IOError, Image.UnidentifiedImageError) as e:
             print(f"Error opening image: {e}")

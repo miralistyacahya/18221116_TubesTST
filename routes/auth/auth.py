@@ -34,7 +34,7 @@ def createAccessToken(subject: Union[str, Any], expires_delta: int = None) -> st
     encode_jwt = jwt.encode(enc, JWT_SECRET_KEY, ALGORITHM)
     return encode_jwt
 
-# cek validasi
+# fungsi otorisasi
 async def get_current_user(token: str = Depends(oauth_bearer)) -> SystemUser:
     try:
         payload = jwt.decode(
@@ -57,7 +57,8 @@ async def get_current_user(token: str = Depends(oauth_bearer)) -> SystemUser:
 
     email: str = token_data.sub
     if email is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate user.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, 
+                            detail="Could not validate user.")
     
     return email
 
@@ -70,7 +71,8 @@ async def createNewUser(data: User):
     user = cursor.fetchone()
 
     if user is not None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with this email already exist")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                            detail="User with this email already exist")
     
     hashed_pass = bcrypt_context.hash(data.password)
 
@@ -93,11 +95,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = cursor.fetchone()
 
     if user is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                            detail="Incorrect username or password")
     
     hashed_pass = user[3] #password
     if not bcrypt_context.verify(form_data.password, hashed_pass):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect username or password")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                            detail="Incorrect username or password")
     
     return {
         "access_token": createAccessToken(user[2]),
