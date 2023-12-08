@@ -2,7 +2,7 @@ from fastapi import APIRouter, FastAPI, status, Depends, HTTPException
 from typing import Annotated, Any, Union
 from db import cursor, conn
 from datetime import timedelta, datetime
-import os
+import os, requests
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from models.userModel import User, UserOut, SystemUser, Token, TokenPayload
@@ -74,6 +74,14 @@ async def createNewUser(data: User):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
                             detail="User with this email already exist")
     
+    query = "SELECT username FROM users WHERE username=%s;"
+    cursor.execute(query, (data.username,))
+    uname = cursor.fetchone()
+
+    if uname is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, 
+                            detail="User with this username already exist")
+
     hashed_pass = bcrypt_context.hash(data.password)
 
     query = "INSERT INTO users (username, name, email, password) VALUES (%s, %s, %s, %s)"
@@ -106,7 +114,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {
         "access_token": createAccessToken(user[2]),
         "token_type": "bearer"
-    }
+        }
 
 
 

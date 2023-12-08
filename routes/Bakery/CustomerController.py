@@ -72,18 +72,29 @@ async def createNewCustomer(customer : Customer):
     #     raise HTTPException(status_code=400, detail=f"Customer dengan no. telpon {customer.phone} sudah tersedia")
     
     # cursor = conn.cursor()
-    query = "INSERT INTO customers (customer_name, phone) VALUES (%s, %s)"
-    cursor.execute(query, (customer.customer_name, customer.phone))
-    conn.commit()
-    customer_id = cursor.lastrowid
-    # cursor.close()
+    query = "SELECT customer_id FROM customers WHERE phone=%s;"
+    cursor.execute(query, (customer.phone,))
+    customer_id = cursor.fetchone()
+    if(customer_id) :
+        return {
+            "success": True,
+            "message": f"customer tersebut sudah tersedia",
+            "code": 200,
+            "customer_id": customer_id[0]
+        }
+    else:
+        query = "INSERT INTO customers (customer_name, phone) VALUES (%s, %s)"
+        cursor.execute(query, (customer.customer_name, customer.phone))
+        conn.commit()
+        customer_id = cursor.lastrowid
+        # cursor.close()
 
-    return {
-        "success": True,
-        "message": f"customer dengan nama {customer.customer_name} berhasil dibuat",
-        "code": 200,
-        "customer_id": customer_id
-    }
+        return {
+            "success": True,
+            "message": f"customer dengan nama {customer.customer_name} berhasil dibuat",
+            "code": 200,
+            "customer_id": customer_id
+        }
 
 
 

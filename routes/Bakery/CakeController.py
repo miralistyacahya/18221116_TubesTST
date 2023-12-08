@@ -41,7 +41,7 @@ async def getAllCake():
 @cakeRouter.get("/cake/{cake_id}")
 async def getCake(cake_id: int):
     # cursor = conn.cursor()
-    query = "SELECT cake_id, cake_name, template_img, created_at, updated_at FROM cakes WHERE cake_id=%s;"
+    query = "SELECT cake_id, cake_name, template_img, created_at, updated_at, cake_image FROM cakes WHERE cake_id=%s;"
     cursor.execute(query, (cake_id,))
     cake_records = cursor.fetchone()
     # cursor.close() 
@@ -68,9 +68,12 @@ async def chooseCake(cake_id: int):
        
         try:
             # GCS environment yang di set di env
+
+            # credentials_json = GCS_CREDENTIALS
             credentials_json = os.getenv("GCS_CREDENTIALS")
             # diubah (decode) menjadi JSON lagi
             decoded_json = json.loads(credentials_json)
+            # print(decoded_json)
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Error loading GCS credentials: {str(e)}")
         

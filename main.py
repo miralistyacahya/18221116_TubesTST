@@ -5,8 +5,17 @@ from routes.Bakery.CakeController import cakeRouter
 from routes.Bakery.CustomerController import customerRouter
 from routes.Bakery.OrderController import orderRouter
 from routes.auth.auth import authRouter
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(authRouter)
 app.include_router(cakeRouter)

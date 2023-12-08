@@ -7,6 +7,7 @@ class Cake(BaseModel):
     template_img: Optional[str]
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
+    cake_image: Optional[str]
 
     class Config:
         json_schema_extra = {

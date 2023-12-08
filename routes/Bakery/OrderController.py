@@ -56,6 +56,28 @@ async def getOrder(order_id: int):
         "response": order_records
     }
 
+@orderRouter.get("/customerOrder/{phone}")
+async def getCustomerOrder(phone: str):
+    # cursor = conn.cursor()
+    query = "SELECT customer_id from customers WHERE phone=%s;"
+    cursor.execute(query, (phone,))
+    order_records = cursor.fetchone()
+    # cursor.close() 
+
+    if not order_records:
+        raise HTTPException(status_code=404, detail="Order not found")
+
+    else :
+        query = "SELECT order_id, customer_id, cake_id, order_date, pickup_date, order_status, addr, cake_img, created_at, updated_at FROM orders WHERE customer_id=%s;"
+        cursor.execute(query, (order_records[0],))
+        orders_records = cursor.fetchall()
+    return {
+        "success": True,
+        "message": "success",
+        "code": 200,
+        "response": orders_records
+    }
+
 @orderRouter.get("/order/{order_id}/design", response_class=FileResponse)
 async def getDesign(order_id: int):
     # cursor = conn.cursor()
@@ -100,7 +122,7 @@ async def getDesign(order_id: int):
         except (IOError, Image.UnidentifiedImageError) as e:
             print(f"Error opening image: {e}")
 
-@orderRouter.get("/order/recommendation")
+@orderRouter.get("/recommendation")
 async def getRecommendation():
     query = "With getMost as (SELECT cake_id, COUNT(*) as order_count FROM orders GROUP BY cake_id ORDER BY order_count desc LIMIT 1) select cake_id from getMost;"
     cursor.execute(query)
@@ -116,7 +138,7 @@ async def getRecommendation():
     mostOrderedInfo = cursor.fetchone()
 
     if not mostOrderedInfo:
-        raise HTTPException(status_code=400, detail="Belum ada rekomendasi yang dapat diberikan")
+        raise HTTPException(status_code=404, detail="Belum ada rekomendasi yang dapat diberikan")
     
     return {
         "cake_name": mostOrderedInfo[0],
@@ -166,6 +188,7 @@ async def createOrder(order: Order):
     try:
 
         # cursor = conn.cursor()
+        # print(order)
         query = "INSERT INTO orders (customer_id, cake_id, order_date, pickup_date, order_status, addr) VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute(query, (order.customer_id, order.cake_id, order.order_date, order.pickup_date, order.order_status, order.addr))
         conn.commit()
@@ -212,6 +235,7 @@ async def addImage(order_id: int, file: UploadFile = File(...)):
         try:
             # GCS environment yang di set di env
             credentials_json = os.getenv("GCS_CREDENTIALS")
+            
             # diubah (decode) menjadi JSON lagi
             decoded_json = json.loads(credentials_json)
         except Exception as e:
