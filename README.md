@@ -23,7 +23,7 @@ Virtual Personalized Cake Design adalah sebuah ide layanan berupa pemberian kese
 | 03  |   [**Github Web Dev**](https://github.com/miralistyacahya/DreamDough_TST)                             |    Repository interface API (web) pada Github saat development   | 
 | 04  |   [**Github Web Deploy**](https://github.com/miralistyacahya/TST_DreamDough)                          | Repository interface API (web) refaktor untuk deploy + fix code  | 
 | 05  | [**Web hasil Deploy**](https://tst-dream-dough-2hex6xv0e-miralistya-cahyas-projects.vercel.app/cakes) | Interface API (web) yang telah di-deploy pada vercel             | 
-| 06  | [**Dokumen**](https://tst-dream-dough-2hex6xv0e-miralistya-cahyas-projects.vercel.app/cakes)          | Dokumen Laporan                                                  | 
+| 06  | [**Dokumen**](https://drive.google.com/file/d/1yoamt3CY6xiu7yW-Atznz0JGDDNXxrWn/view?usp=sharing)     | Dokumen Laporan                                                  | 
 
 
 ### ⚙️ Tech Stack
